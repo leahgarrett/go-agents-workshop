@@ -44,7 +44,8 @@ import (
     "context"
     "fmt"
     "os"
-    "github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
 type Agent struct {
@@ -53,7 +54,13 @@ type Agent struct {
 }
 
 func main() {
-    client := anthropic.NewClient()
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	if apiKey == "" {
+		fmt.Fprintln(os.Stderr, "Error: ANTHROPIC_API_KEY is not set")
+		os.Exit(1)
+	}
+
+	client := anthropic.NewClient(option.WithAPIKey(apiKey))
     scanner := bufio.NewScanner(os.Stdin)
 
     getUserMessage := func() (string, bool) {
