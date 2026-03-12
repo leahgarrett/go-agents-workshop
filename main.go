@@ -69,6 +69,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		conversation = append(conversation, message.ToParam())
 
 		toolResults := []anthropic.ContentBlockParamUnion{}
+		sawServerToolUse := false
 		for _, content := range message.Content {
 			switch content.Type {
 			case "text":
@@ -76,14 +77,19 @@ func (a *Agent) Run(ctx context.Context) error {
 			case "tool_use":
 				result := a.executeTool(content.ID, content.Name, content.Input)
 				toolResults = append(toolResults, result)
+			case "server_tool_use":
+				sawServerToolUse = true
+				fmt.Printf("\u001b[92mtool\u001b[0m: %s(%s)\n", content.Name, content.Input)
 			}
 		}
-		if len(toolResults) == 0 {
+		if len(toolResults) == 0 && !sawServerToolUse {
 			readUserInput = true
 			continue
 		}
 		readUserInput = false
-		conversation = append(conversation, anthropic.NewUserMessage(toolResults...))
+		if len(toolResults) > 0 {
+			conversation = append(conversation, anthropic.NewUserMessage(toolResults...))
+		}
 	}
 
 	return nil
@@ -125,6 +131,13 @@ func (a *Agent) runInference(ctx context.Context, conversation []anthropic.Messa
 			},
 		})
 	}
+
+	// Anthropic-hosted web search tool.
+	anthropicTools = append(anthropicTools, anthropic.ToolUnionParam{
+		OfWebSearchTool20250305: &anthropic.WebSearchTool20250305Param{
+			AllowedCallers: []string{"direct"},
+		},
+	})
 
 	message, err := a.client.Messages.New(ctx, anthropic.MessageNewParams{
 		Model:     anthropic.ModelClaude4Sonnet20250514,
