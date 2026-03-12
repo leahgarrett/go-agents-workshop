@@ -79,19 +79,6 @@ func NewAgent(client *anthropic.Client, getUserMessage func() (string, bool)) *A
 ```
 
 
-Create a file main.go
-with start code
-```go
-package main
-
-import "github.com/anthropics/anthropic-sdk-go"
-
-func main() {
-	client := anthropic.NewClient()
-
-}
-
-```
 
 
 ## 3. The Heartbeat (The Loop)
@@ -126,7 +113,7 @@ func (a *Agent) Run(ctx context.Context) error {
 
 func (a *Agent) runInference(ctx context.Context, conversation []anthropic.MessageParam) (*anthropic.Message, error) {
     return a.client.Messages.New(ctx, anthropic.MessageNewParams{
-        Model:     anthropic.ModelClaude3_7SonnetLatest,
+        Model:     anthropic.ModelClaude4Sonnet20250514,
         MaxTokens: int64(1024),
         Messages:  conversation,
     })
@@ -225,7 +212,7 @@ func (a *Agent) runInference(ctx context.Context, conversation []anthropic.Messa
 	}
 
 	message, err := a.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.ModelClaude3_7SonnetLatest,
+		Model:     anthropic.ModelClaude4Sonnet20250514,
 		MaxTokens: int64(1024),
 		Messages:  conversation,
 		Tools:     anthropicTools,
